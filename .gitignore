@@ -1,0 +1,32 @@
+# Dependências (MUITO IMPORTANTE: Não enviar a pasta node_modules, ela é pesada e se reinstala com 'npm install')
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Arquivos do Sistema Operacional (Windows/Mac)
+.DS_Store
+Thumbs.db
+
+# Logs gerais e Metro bundler
+*.log
+.metro-health-check*
+
+# Configurações do seu Editor de Código (VS Code, etc.)
+.vscode/
+.idea/
+
+# Android (Arquivos gerados automaticamente e configurações locais)
+android/app/build/
+android/.gradle/
+android/local.properties
+android/*.iml
+*.apk
+*.aab
+
+# iOS (Arquivos gerados automaticamente e Pods)
+ios/Pods/
+ios/build/
+*.xcworkspace
+!default.xcworkspace
+ios/*.xcodeproj/xcuserdata/
