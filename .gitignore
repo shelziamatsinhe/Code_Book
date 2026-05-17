@@ -1,4 +1,4 @@
-# Dependências (MUITO IMPORTANTE: Não enviar a pasta node_modules, ela é pesada e se reinstala com 'npm install')
+# React Native - .gitignore
 node_modules/
 npm-debug.log*
 yarn-debug.log*
