@@ -1,9 +1,14 @@
-/**
- * @format
- */
+import React from 'react';
+import {StatusBar} from 'react-native';
+import AppNavigator from './routes/AppNavigator';
 
-import {AppRegistry} from 'react-native';
-import App from './src/index';
-import {name as appName} from './app.json';
+const App = () => {
+  return (
+    <>
+      <StatusBar barStyle="light-content" backgroundColor="#4a1d6e" />
+      <AppNavigator />
+    </>
+  );
+};
 
-AppRegistry.registerComponent(appName, () => App);
+export default App;
