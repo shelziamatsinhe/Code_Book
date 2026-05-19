@@ -19,7 +19,7 @@ const HomeScreen = () => {
       <TouchableOpacity style={styles.card} activeOpacity={0.85}>
         <View style={styles.cardHeader}>
           <Text style={styles.courseCode}>{item.code}</Text>
-          <Text style={styles.credits}>{item.credits} Creditos</Text>
+          <Text style={styles.year}>{item.year} Ano</Text>
         </View>
         <Text style={styles.courseName}>{item.name}</Text>
         <View style={styles.footer}>
