@@ -94,7 +94,7 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#6b2fa033',
   },
-  credits: {
+  year: {
     fontSize: 12,
     fontWeight: '600',
     color: '#f5a623',

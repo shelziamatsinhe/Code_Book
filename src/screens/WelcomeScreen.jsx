@@ -27,7 +27,7 @@ const WelcomeScreen = ({ navigation }) => {
           resizeMode="contain"
         />
         <Text style={styles.description}>
-          Aprenda disciplinas de forma simples,{'\n'}organizada e prática.
+          Bem Vindo ao Code Book.
         </Text>
       </View>
 

@@ -16,7 +16,7 @@ const HomeScreen = () => {
 
   const renderCourseItem = ({ item }) => {
     return (
-      <TouchableOpacity style={styles.card} activeOpacity={0.85}>
+      <TouchableOpacity style={styles.card} activeOpacity={0.50}>
         <View style={styles.cardHeader}>
           <Text style={styles.courseCode}>{item.code}</Text>
           <Text style={styles.year}>{item.year} Ano</Text>

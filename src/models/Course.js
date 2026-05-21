@@ -5,7 +5,7 @@ export const MOCK_COURSES = [
     code: 'PWM',
     semester: 2,
     year: 2,
-  },
+      },
   {
     id: '2',
     name: 'Estruturas de Dados e Algoritmos',
