@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "197516387054",
+    "project_id": "codebook-4fc33",
+    "storage_bucket": "codebook-4fc33.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:197516387054:android:ec2ed92515b33fa0d889ff",
+        "android_client_info": {
+          "package_name": "com.code_book"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAnuTU-J3p2xwaec52qA3vlBSLfeU9DewQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:197516387054:android:0215856ef192fab3d889ff",
+        "android_client_info": {
+          "package_name": "com.codebook"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAnuTU-J3p2xwaec52qA3vlBSLfeU9DewQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
