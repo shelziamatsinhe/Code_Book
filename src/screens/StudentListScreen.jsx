@@ -21,6 +21,7 @@ import {
 import StudentService from '../services/StudentService';
 import { styles } from './StudentList.styles';
 
+
 // ============================================================
 // Componente: StudentCard
 // Descrição: Card de cada estudante da API
@@ -39,30 +40,29 @@ const StudentCard = ({ student }) => {
       style={styles.card}
       accessibilityLabel={`Estudante ${student.name}, número ${student.number}`}>
 
-     // Avatar
-<Text style={styles.avatarText}>
-  {getInitials(student?.name)}
-</Text>
+      {/* Avatar - AQUI ESTÁ A CORREÇÃO: usei a variável {initials} */}
+      <Text style={styles.avatarText}>
+        {initials}
+      </Text>
 
-// Nome
-<Text style={styles.studentName}>
-  {student?.name || 'Estudante'}
-</Text>
+      {/* Nome */}
+      <Text style={styles.studentName}>
+        {student?.name || 'Estudante'}
+      </Text>
 
-// Número
-<Text style={styles.studentNumber}>
-  Nº {student?.number || '—'}
-</Text>
+      {/* Número */}
+      <Text style={styles.studentNumber}>
+        Nº {student?.number || '—'}
+      </Text>
 
-// Curso
-<Text style={styles.studentCourse}>
-  {student?.course || 'Engenharia Informática'}
-</Text>
+      {/* Curso */}
+      <Text style={styles.studentCourse}>
+        {student?.course || 'Engenharia Informática'}
+      </Text>
 
-// Email na secção de informações
-<Text style={styles.infoValue}>{student?.email || '—'}
-</Text>
-</View>
+      {/* Email na secção de informações */}
+      <Text style={styles.infoValue}>{student?.email || '—'}</Text>
+    </View>
   );
 };
 
