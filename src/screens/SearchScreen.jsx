@@ -43,9 +43,9 @@ const CourseCard = ({ item, onPress }) => (
       </Text>
       {/* Créditos */}
       <Text
-        style={styles.credits}
-        accessibilityLabel={`${item.credits} créditos`}>
-        {item.credits} Creditos
+        style={styles.year}
+        accessibilityLabel={`${item.year} Ano`}>
+        {item.year} Ano
       </Text>
     </View>
 
