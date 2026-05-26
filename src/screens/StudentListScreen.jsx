@@ -39,23 +39,30 @@ const StudentCard = ({ student }) => {
       style={styles.card}
       accessibilityLabel={`Estudante ${student.name}, número ${student.number}`}>
 
-      {/* Avatar com iniciais */}
-      <View
-        style={styles.avatar}
-        accessibilityElementsHidden={true}>
-        <Text style={styles.avatarText}>{initials}</Text>
-      </View>
+     // Avatar
+<Text style={styles.avatarText}>
+  {getInitials(student?.name)}
+</Text>
 
-      {/* Informações do estudante */}
-      <View style={styles.cardInfo}>
-        <Text style={styles.studentName}>{student.name}</Text>
-        <Text style={styles.studentNumber}>Nº {student.number}</Text>
-        <Text style={styles.studentEmail}>{student.email}</Text>
-        <View style={styles.courseBadge}>
-          <Text style={styles.courseBadgeText}>{student.course}</Text>
-        </View>
-      </View>
-    </View>
+// Nome
+<Text style={styles.studentName}>
+  {student?.name || 'Estudante'}
+</Text>
+
+// Número
+<Text style={styles.studentNumber}>
+  Nº {student?.number || '—'}
+</Text>
+
+// Curso
+<Text style={styles.studentCourse}>
+  {student?.course || 'Engenharia Informática'}
+</Text>
+
+// Email na secção de informações
+<Text style={styles.infoValue}>{student?.email || '—'}
+</Text>
+</View>
   );
 };
 

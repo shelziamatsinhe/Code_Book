@@ -1,9 +1,7 @@
 // ============================================================
 // Screen: WelcomeScreen.jsx
 // Camada: View (MVVM)
-// Descrição: Ecrã de boas-vindas com acessibilidade completa
-// Acessibilidade: accessibilityLabel, accessibilityRole,
-//                 accessibilityHint em todos os elementos
+// Descrição: Ecrã de boas-vindas
 // ============================================================
 
 import React from 'react';
@@ -14,24 +12,21 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
-  useWindowDimensions, // Responsivo — atualiza com rotação
+  useWindowDimensions,
 } from 'react-native';
 
 const WelcomeScreen = ({ navigation }) => {
-  // Dimensões dinâmicas — adapta ao ecrã e rotação
   const { width, height } = useWindowDimensions();
 
   return (
     <SafeAreaView
       style={styles.container}
-      // Acessibilidade: descreve o ecrã para leitores de ecrã
       accessibilityLabel="Ecrã de boas-vindas do CodeBook">
 
       {/* Topo com título */}
       <View style={styles.topSection}>
         <Text
           style={styles.title}
-          // Acessibilidade: título principal da app
           accessibilityRole="header"
           accessibilityLabel="CodeBook, aplicação de guias da UJAC">
           Code Book
@@ -42,18 +37,13 @@ const WelcomeScreen = ({ navigation }) => {
       <View style={styles.middleSection}>
         <Image
           source={require('../assets/reader.png')}
-          style={{
-            width: width * 0.65,
-            height: height * 0.35,
-          }}
+          style={{ width: width * 0.65, height: height * 0.35 }}
           resizeMode="contain"
-          // Acessibilidade: descrição da imagem para utilizadores com deficiência visual
           accessibilityLabel="Ilustração de um estudante a ler livros coloridos"
           accessibilityRole="image"
         />
         <Text
           style={styles.description}
-          // Acessibilidade: descrição do propósito da app
           accessibilityLabel="Aprenda disciplinas de forma simples, organizada e prática">
           Aprenda disciplinas de forma simples,{'\n'}organizada e prática.
         </Text>
@@ -63,11 +53,10 @@ const WelcomeScreen = ({ navigation }) => {
       <View style={styles.bottomSection}>
         <TouchableOpacity
           style={styles.button}
-          onPress={() => navigation.navigate('Main')}
+          onPress={() => navigation.navigate('Login')}
           activeOpacity={0.85}
-          // Acessibilidade: descreve o botão e o resultado da ação
           accessibilityLabel="Seguinte"
-          accessibilityHint="Avança para a lista de cadeiras do curso"
+          accessibilityHint="Avança para o login"
           accessibilityRole="button">
           <Text style={styles.buttonText}>Seguinte</Text>
         </TouchableOpacity>

@@ -1,10 +1,8 @@
 // ============================================================
 // Screen: ProfileScreen.jsx
 // Camada: View (MVVM)
-// Descrição: Perfil do estudante com informações pessoais,
-//            estatísticas e opções de configuração
-// Acessibilidade: accessibilityLabel e accessibilityRole
-//                 em todos os elementos
+// Descrição: Perfil dinâmico do estudante com dados reais
+//            da sessão guardada no AsyncStorage
 // ============================================================
 
 import React from 'react';
@@ -16,51 +14,87 @@ import {
   TouchableOpacity,
   useWindowDimensions,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 
-// Importa ViewModel e estilos separados
-import { useProfileViewModel } from '../viewmodels/ProfileViewModel';
+// Importa ViewModel de sessão e favoritos
+import { useSessionViewModel } from '../viewmodels/LoginViewModel';
+import { useFavoritesViewModel } from '../viewmodels/FavoritesViewModel';
 import { styles } from './Profile.styles';
 
-// ============================================================
-// Screen principal: ProfileScreen
-// ============================================================
 const ProfileScreen = ({ navigation }) => {
-  // Hook do ViewModel com dados do estudante
-  const { student, stats, getInitials } = useProfileViewModel();
+  // Dados reais da sessão
+  const { student, isLoading, logout } = useSessionViewModel();
+
+  // Favoritos para estatísticas
+  const { favorites } = useFavoritesViewModel();
 
   // Adapta ao tamanho do ecrã e rotação
   const { width } = useWindowDimensions();
 
-  // Simula logout — na Fase 3 será Firebase Auth signOut
+  // Gera iniciais do nome para o avatar
+  const getInitials = (name) => {
+    if (!name) return 'CB';
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase();
+  };
+
+  // Estatísticas do estudante
+  const stats = {
+    favorites: favorites.length,
+    courses: 4,
+    guides: 6,
+  };
+
+  // Termina sessão e vai para Login
   const handleLogout = () => {
     Alert.alert(
       'Terminar Sessão',
       'Tens a certeza que queres sair?',
       [
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-        },
+        { text: 'Cancelar', style: 'cancel' },
         {
           text: 'Sair',
           style: 'destructive',
-          onPress: () => {
-            // Na Fase 3: Firebase Auth signOut()
-            navigation.navigate('Welcome');
+          onPress: async () => {
+            await logout();
+            navigation.replace('Login');
           },
         },
       ],
     );
   };
 
+  // Ecrã de carregamento
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator
+          size="large"
+          color="#8b45c5"
+          style={{ marginTop: 60 }}
+          accessibilityLabel="A carregar perfil"
+        />
+      </SafeAreaView>
+    );
+  }
+
+  // Se não há sessão redireciona para login
+  if (!student) {
+    navigation.replace('Login');
+    return null;
+  }
+
   return (
     <SafeAreaView
       style={styles.container}
       accessibilityLabel="Ecrã de perfil do estudante">
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false}>
 
         {/* Header com avatar e nome */}
         <View
@@ -177,39 +211,39 @@ const ProfileScreen = ({ navigation }) => {
             <Text style={styles.actionButtonArrow}>›</Text>
           </TouchableOpacity>
 
+          <TouchableOpacity
+            style={styles.actionButton}
+            activeOpacity={0.85}
+            onPress={() => navigation.navigate('Register')}
+            accessibilityLabel="Registar novo estudante"
+            accessibilityRole="button">
+            <Text style={styles.actionButtonIcon}>📝</Text>
+            <Text style={styles.actionButtonText}>Registar estudante</Text>
+            <Text style={styles.actionButtonArrow}>›</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.actionButton}
+            activeOpacity={0.85}
+            onPress={() => navigation.navigate('StudentList')}
+            accessibilityLabel="Ver lista de estudantes"
+            accessibilityRole="button">
+            <Text style={styles.actionButtonIcon}>👥</Text>
+            <Text style={styles.actionButtonText}>Ver estudantes</Text>
+            <Text style={styles.actionButtonArrow}>›</Text>
+          </TouchableOpacity>
+
           {/* Botão logout */}
           <TouchableOpacity
             style={styles.logoutButton}
             activeOpacity={0.85}
             onPress={handleLogout}
             accessibilityLabel="Terminar sessão"
-            accessibilityHint="Sai da conta e regressa ao ecrã inicial"
+            accessibilityHint="Sai da conta e regressa ao ecrã de login"
             accessibilityRole="button">
             <Text>🚪</Text>
             <Text style={styles.logoutText}>Terminar Sessão</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity
-  style={styles.actionButton}
-  activeOpacity={0.85}
-  onPress={() => navigation.navigate('Register')}
-  accessibilityLabel="Registar novo estudante"
-  accessibilityRole="button">
-  <Text style={styles.actionButtonIcon}>📝</Text>
-  <Text style={styles.actionButtonText}>Registar estudante</Text>
-  <Text style={styles.actionButtonArrow}>›</Text>
-</TouchableOpacity>
-
-<TouchableOpacity
-  style={styles.actionButton}
-  activeOpacity={0.85}
-  onPress={() => navigation.navigate('StudentList')}
-  accessibilityLabel="Ver lista de estudantes"
-  accessibilityRole="button">
-  <Text style={styles.actionButtonIcon}>👥</Text>
-  <Text style={styles.actionButtonText}>Ver estudantes</Text>
-  <Text style={styles.actionButtonArrow}>›</Text>
-</TouchableOpacity>
 
           {/* Badge UJAC */}
           <View style={styles.ujacBadge}>
