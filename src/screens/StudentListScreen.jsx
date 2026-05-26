@@ -40,7 +40,7 @@ const StudentCard = ({ student }) => {
       style={styles.card}
       accessibilityLabel={`Estudante ${student.name}, número ${student.number}`}>
 
-      {/* Avatar - AQUI ESTÁ A CORREÇÃO: usei a variável {initials} */}
+  
       <Text style={styles.avatarText}>
         {initials}
       </Text>
