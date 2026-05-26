@@ -1,6 +1,6 @@
 // ============================================================
 // Styles: StudentList.styles.js
-// Descrição: Estilos separados da StudentListScreen
+// Descrição: Estilos da StudentListScreen
 // ============================================================
 
 import { StyleSheet } from 'react-native';
@@ -10,6 +10,8 @@ export const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0f0a1a',
   },
+
+  // Header
   header: {
     backgroundColor: '#4a1d6e',
     paddingHorizontal: 20,
@@ -51,6 +53,7 @@ export const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 13,
     color: '#d4b8f0',
+    marginBottom: 10,
   },
   apiBadge: {
     flexDirection: 'row',
@@ -60,20 +63,22 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     alignSelf: 'flex-start',
-    marginTop: 10,
     borderWidth: 1,
     borderColor: '#22c55e33',
-    gap: 6,
   },
   apiBadgeText: {
     fontSize: 11,
     color: '#22c55e',
     fontWeight: '700',
   },
+
+  // Lista
   listContent: {
     padding: 16,
     paddingBottom: 32,
   },
+
+  // Card
   card: {
     backgroundColor: '#1a0f2e',
     borderRadius: 16,
@@ -86,19 +91,25 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 14,
   },
+
+  // Avatar
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: '#6b2fa0',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#8b45c530',
   },
   avatarText: {
     fontSize: 16,
     fontWeight: '800',
     color: '#ffffff',
   },
+
+  // Info do estudante
   cardInfo: {
     flex: 1,
   },
@@ -106,16 +117,18 @@ export const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     color: '#f1e6ff',
-    marginBottom: 4,
+    marginBottom: 3,
   },
   studentNumber: {
     fontSize: 12,
     color: '#7a5fa0',
     marginBottom: 2,
+    fontWeight: '500',
   },
   studentEmail: {
     fontSize: 12,
     color: '#7a5fa0',
+    marginBottom: 6,
   },
   courseBadge: {
     alignSelf: 'flex-start',
@@ -123,7 +136,6 @@ export const styles = StyleSheet.create({
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    marginTop: 6,
     borderWidth: 1,
     borderColor: '#6b2fa033',
     overflow: 'hidden',
@@ -133,6 +145,8 @@ export const styles = StyleSheet.create({
     color: '#8b45c5',
     fontWeight: '600',
   },
+
+  // Loading
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
@@ -143,6 +157,8 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     color: '#7a5fa0',
   },
+
+  // Erro
   errorContainer: {
     flex: 1,
     alignItems: 'center',
@@ -163,6 +179,7 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     color: '#7a5fa0',
     textAlign: 'center',
+    lineHeight: 22,
   },
   retryButton: {
     backgroundColor: '#6b2fa0',

@@ -17,10 +17,8 @@ import {
   useWindowDimensions,
 } from 'react-native';
 
-// Importa o serviço e estilos separados
 import StudentService from '../services/StudentService';
 import { styles } from './StudentList.styles';
-
 
 // ============================================================
 // Componente: StudentCard
@@ -40,28 +38,20 @@ const StudentCard = ({ student }) => {
       style={styles.card}
       accessibilityLabel={`Estudante ${student.name}, número ${student.number}`}>
 
-  
-      <Text style={styles.avatarText}>
-        {initials}
-      </Text>
+      {/* Avatar com iniciais */}
+      <View style={styles.avatar} accessibilityElementsHidden={true}>
+        <Text style={styles.avatarText}>{initials}</Text>
+      </View>
 
-      {/* Nome */}
-      <Text style={styles.studentName}>
-        {student?.name || 'Estudante'}
-      </Text>
-
-      {/* Número */}
-      <Text style={styles.studentNumber}>
-        Nº {student?.number || '—'}
-      </Text>
-
-      {/* Curso */}
-      <Text style={styles.studentCourse}>
-        {student?.course || 'Engenharia Informática'}
-      </Text>
-
-      {/* Email na secção de informações */}
-      <Text style={styles.infoValue}>{student?.email || '—'}</Text>
+      {/* Informações do estudante */}
+      <View style={styles.cardInfo}>
+        <Text style={styles.studentName}>{student.name}</Text>
+        <Text style={styles.studentNumber}>Nº {student.number}</Text>
+        <Text style={styles.studentEmail}>{student.email}</Text>
+        <View style={styles.courseBadge}>
+          <Text style={styles.courseBadgeText}>{student.course}</Text>
+        </View>
+      </View>
     </View>
   );
 };
@@ -70,28 +60,18 @@ const StudentCard = ({ student }) => {
 // Screen principal: StudentListScreen
 // ============================================================
 const StudentListScreen = ({ navigation }) => {
-  // Estado dos estudantes
   const [students, setStudents] = useState([]);
-
-  // Estado de carregamento
   const [isLoading, setIsLoading] = useState(true);
-
-  // Estado de erro
   const [error, setError] = useState(null);
-
-  // Adapta ao tamanho do ecrã e rotação
   const { width } = useWindowDimensions();
 
-  // Carrega os estudantes ao montar o componente
   useEffect(() => {
     loadStudents();
   }, []);
 
-  // Função que chama o serviço
   const loadStudents = async () => {
     setIsLoading(true);
     setError(null);
-
     try {
       const data = await StudentService.getStudents();
       setStudents(data);
@@ -102,33 +82,23 @@ const StudentListScreen = ({ navigation }) => {
     }
   };
 
-  // Ecrã de carregamento
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator
-            size="large"
-            color="#8b45c5"
-            accessibilityLabel="A carregar estudantes da API"
-          />
+          <ActivityIndicator size="large" color="#8b45c5" />
           <Text style={styles.loadingText}>A carregar estudantes...</Text>
         </View>
       </SafeAreaView>
     );
   }
 
-  // Ecrã de erro
   if (error) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
           <Text style={styles.errorEmoji}>📡</Text>
-          <Text
-            style={styles.errorTitle}
-            accessibilityRole="header">
-            Sem ligação
-          </Text>
+          <Text style={styles.errorTitle} accessibilityRole="header">Sem ligação</Text>
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity
             style={styles.retryButton}
@@ -143,9 +113,7 @@ const StudentListScreen = ({ navigation }) => {
   }
 
   return (
-    <SafeAreaView
-      style={styles.container}
-      accessibilityLabel="Lista de estudantes registados">
+    <SafeAreaView style={styles.container} accessibilityLabel="Lista de estudantes registados">
 
       {/* Header */}
       <View style={styles.header}>
@@ -158,27 +126,20 @@ const StudentListScreen = ({ navigation }) => {
         </TouchableOpacity>
 
         <View style={styles.headerTop}>
-          <Text
-            style={styles.headerTitle}
-            accessibilityRole="header">
+          <Text style={styles.headerTitle} accessibilityRole="header">
             Estudantes
           </Text>
           <Text style={styles.headerCount}>{students.length} registados</Text>
         </View>
 
-        <Text style={styles.headerSubtitle}>
-          Lista de estudantes da UJAC
-        </Text>
+        <Text style={styles.headerSubtitle}>Lista de estudantes da UJAC</Text>
 
-        {/* Badge a indicar que os dados vêm da API */}
         <View style={styles.apiBadge}>
-          <Text style={styles.apiBadgeText}>
-            🌐 JSONPlaceholder API
-          </Text>
+          <Text style={styles.apiBadgeText}>🌐 JSONPlaceholder API</Text>
         </View>
       </View>
 
-      {/* Lista de estudantes */}
+      {/* Lista */}
       <FlatList
         data={students}
         keyExtractor={(item) => item.id}
