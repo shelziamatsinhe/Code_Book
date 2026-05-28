@@ -1,145 +1,67 @@
-// ============================================================
-// Screen: HomeScreen.jsx
-// Camada: View (MVVM)
-// Descrição: Lista de cadeiras com acessibilidade completa
-// Acessibilidade: accessibilityLabel, accessibilityRole,
-//                 accessibilityHint em todos os elementos
-// ============================================================
-
+// src/screens/HomeScreen.jsx
 import React from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  SafeAreaView,
-  TouchableOpacity,
-} from 'react-native';
+import {View, Text, FlatList, SafeAreaView, TouchableOpacity} from 'react-native';
 
-// Importa ViewModel e estilos separados
-import { HomeViewModel } from '../viewmodels/HomeViewModel';
-import { styles } from './HomeScreen.styles';
+import {HomeViewModel} from '../viewmodels/HomeViewModel';
+import {styles} from './HomeScreen.styles';
 
 const viewModel = new HomeViewModel();
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = ({navigation}) => {
   const courses = viewModel.getCourses();
 
-  // Renderiza cada card de cadeira
-  const renderCourseItem = ({ item }) => {
-    return (
-      <TouchableOpacity
-        style={styles.card}
-        activeOpacity={0.85}
-        onPress={() => navigation.navigate('CourseDetail', { course: item })}
-        // Acessibilidade: descreve o card e o resultado do clique
-        accessibilityLabel={`Cadeira ${item.name}, código ${item.code}`}
-        accessibilityHint={`Abre os guias práticos da cadeira ${item.name}`}
-        accessibilityRole="button">
+  const renderCourseItem = ({item}) => (
+    <TouchableOpacity
+      style={styles.card}
+      activeOpacity={0.85}
+      onPress={() => navigation.navigate('CourseDetail', {course: item})}
+      accessibilityLabel={`Cadeira ${item.name}, codigo ${item.code}`}
+      accessibilityRole="button">
+      <View style={styles.cardHeader}>
+        <Text style={styles.courseCode}>{item.code}</Text>
+        <Text style={styles.year}>{item.year} Ano</Text>
+      </View>
+      <Text style={styles.courseName}>{item.name}</Text>
+      <View style={styles.footer}>
+        <Text style={styles.semesterText}>{item.semester}o Semestre</Text>
+        <Text style={styles.arrow}>→</Text>
+      </View>
+    </TouchableOpacity>
+  );
 
-        <View style={styles.cardHeader}>
-          {/* Código da cadeira */}
-          <Text
-            style={styles.courseCode}
-            accessibilityLabel={`Código: ${item.code}`}>
-            {item.code}
-          </Text>
-          {/* Anos */}
-          <Text
-            style={styles.year}
-            accessibilityLabel={`${item.year} ano`}>
-            {item.year} Ano
-          </Text>
+  // Header como componente dentro da FlatList — scroll correto
+  const ListHeader = () => (
+    <View style={styles.header}>
+      <View style={styles.headerTop}>
+        <View style={styles.headerBadge}>
+          <Text style={styles.headerBadgeText}>ISET - UJAC</Text>
         </View>
-
-        {/* Nome da cadeira */}
-        <Text
-          style={styles.courseName}
-          accessibilityRole="text">
-          {item.name}
-        </Text>
-
-        <View style={styles.footer}>
-          {/* Semestre */}
-          <Text
-            style={styles.semesterText}
-            accessibilityLabel={`${item.semester}º semestre`}>
-            {item.semester}o Semestre
-          </Text>
-          {/* Seta indicadora */}
-          <Text
-            style={styles.arrow}
-            accessibilityElementsHidden={true} // Oculta da leitura — apenas decorativo
-            importantForAccessibility="no">
-            →
-          </Text>
+        <Text style={styles.headerSemester}>2026</Text>
+      </View>
+      <Text style={styles.headerTitle} accessibilityRole="header">CodeBook</Text>
+      <Text style={styles.headerSubtitle}>Guia de Cadeiras - Eng. Informatica</Text>
+      <View style={styles.headerStats}>
+        <View style={styles.statChip}>
+          <Text style={styles.statChipText}>{courses.length} Cadeiras</Text>
         </View>
-      </TouchableOpacity>
-    );
-  };
+        <View style={styles.statChip}>
+          <Text style={styles.statChipText}>Licenciatura</Text>
+        </View>
+      </View>
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
-
-      {/* Header */}
-      <View
-        style={styles.header}
-        accessibilityRole="header">
-        <View style={styles.headerTop}>
-          <View style={styles.headerBadge}>
-            <Text
-              style={styles.headerBadgeText}
-              accessibilityLabel="Instituto Superior de Engenharia e Tecnologia, UJAC">
-              ISET - UJAC
-            </Text>
-          </View>
-          <Text
-            style={styles.headerSemester}
-            accessibilityLabel="Ano de 2026">
-            2026
-          </Text>
-        </View>
-
-        {/* Título */}
-        <Text
-          style={styles.headerTitle}
-          accessibilityRole="header"
-          accessibilityLabel="CodeBook, guia de cadeiras">
-          CodeBook
-        </Text>
-
-        {/* Subtítulo */}
-        <Text
-          style={styles.headerSubtitle}
-          accessibilityLabel="Guia de cadeiras de Engenharia Informática">
-          Guia de Cadeiras - Eng. Informatica
-        </Text>
-
-        {/* Estatísticas */}
-        <View
-          style={styles.headerStats}
-          accessibilityLabel={`${courses.length} cadeiras disponíveis, nível licenciatura`}>
-          <View style={styles.statChip}>
-            <Text style={styles.statChipText}>{courses.length} Cadeiras</Text>
-          </View>
-          <View style={styles.statChip}>
-            <Text style={styles.statChipText}>Licenciatura</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Lista de cadeiras */}
       <FlatList
         data={courses}
-        keyExtractor={(item) => item.id}
+        keyExtractor={item => item.id}
         renderItem={renderCourseItem}
+        ListHeaderComponent={<ListHeader />}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
-        // Acessibilidade: descreve a lista para leitores de ecrã
-        accessibilityLabel="Lista de cadeiras disponíveis"
         ListEmptyComponent={
-          <View
-            style={styles.emptyContainer}
-            accessibilityLabel="Nenhuma cadeira encontrada">
+          <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>Nenhuma cadeira encontrada</Text>
             <Text style={styles.emptySubText}>Tenta mais tarde</Text>
           </View>

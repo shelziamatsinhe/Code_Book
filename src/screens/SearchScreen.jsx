@@ -1,11 +1,11 @@
 // ============================================================
 // Screen: SearchScreen.jsx
 // Camada: View (MVVM)
-// Descrição: Ecrã de pesquisa de cadeiras por nome,
-//            código ou docente — com acessibilidade completa
+// Descricao: Pesquisa de cadeiras com reconhecimento de voz
+//            A voz usa o Intent nativo do Android (sem biblioteca)
 // ============================================================
 
-import React, { useRef } from 'react';
+import React, {useRef, useState} from 'react';
 import {
   View,
   Text,
@@ -13,59 +13,113 @@ import {
   FlatList,
   SafeAreaView,
   TouchableOpacity,
-  useWindowDimensions,
+  NativeModules,
+  NativeEventEmitter,
+  Platform,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 
-// Importa ViewModel e estilos separados
-import { useSearchViewModel } from '../viewmodels/SearchViewModel';
-import { styles } from './Search.styles';
+import {useSearchViewModel} from '../viewmodels/SearchViewModel';
+import {styles} from './Search.styles';
+
+// ============================================================
+// Reconhecimento de voz via Intent nativo Android
+// Nao precisa de biblioteca externa
+// ============================================================
+let SpeechRecognizer = null;
+try {
+  // Tenta aceder ao modulo nativo de voz do Android
+  SpeechRecognizer = NativeModules.SpeechRecognizerModule || null;
+} catch (e) {
+  SpeechRecognizer = null;
+}
+
+// Funcao que usa o Intent ACTION_RECOGNIZE_SPEECH do Android
+const startVoiceRecognition = (onResult, onError) => {
+  if (Platform.OS !== 'android') {
+    onError('Voz so disponivel no Android');
+    return;
+  }
+
+  try {
+    // Usa o modulo de Intent nativo para abrir o reconhecimento de voz
+    const {IntentAndroid} = NativeModules;
+    if (IntentAndroid) {
+      IntentAndroid.startActivityForResult(
+        {
+          action: 'android.speech.action.RECOGNIZE_SPEECH',
+          extras: {
+            'android.speech.extra.LANGUAGE_MODEL': 'free_form',
+            'android.speech.extra.LANGUAGE': 'pt-MZ',
+            'android.speech.extra.PROMPT': 'Diz o nome da cadeira...',
+            'android.speech.extra.MAX_RESULTS': 1,
+          },
+        },
+        result => {
+          if (result && result['android.speech.extra.RESULTS']) {
+            const text = result['android.speech.extra.RESULTS'][0];
+            onResult(text);
+          } else {
+            onError('Nao foi possivel reconhecer a voz');
+          }
+        },
+      );
+    } else {
+      onError('Reconhecimento de voz nao disponivel neste dispositivo');
+    }
+  } catch (e) {
+    onError('Erro ao iniciar reconhecimento de voz');
+  }
+};
+
+// ============================================================
+// Componente: MicButton
+// Descricao: Botao do microfone com estados visual
+// ============================================================
+const MicButton = ({isListening, onPress}) => (
+  <TouchableOpacity
+    onPress={onPress}
+    activeOpacity={0.8}
+    accessibilityRole="button"
+    accessibilityLabel={isListening ? 'A ouvir...' : 'Pesquisa por voz'}
+    style={{
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: isListening ? '#ef4444' : '#6b2fa0',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginLeft: 8,
+    }}>
+    <Text style={{fontSize: 16}}>
+      {isListening ? '⏹' : '🎤'}
+    </Text>
+  </TouchableOpacity>
+);
 
 // ============================================================
 // Componente: CourseCard
-// Descrição: Card de cada resultado de pesquisa
 // ============================================================
-const CourseCard = ({ item, onPress }) => (
+const CourseCard = ({item, onPress}) => (
   <TouchableOpacity
     style={styles.card}
     activeOpacity={0.85}
     onPress={onPress}
-    // Acessibilidade
-    accessibilityLabel={`Cadeira ${item.name}, código ${item.code}, docente ${item.teacher}`}
-    accessibilityHint={`Abre os guias práticos da cadeira ${item.name}`}
+    accessibilityLabel={`Cadeira ${item.name}, codigo ${item.code}, docente ${item.teacher}`}
     accessibilityRole="button">
-
     <View style={styles.cardHeader}>
-      {/* Código */}
-      <Text
-        style={styles.courseCode}
-        accessibilityLabel={`Código: ${item.code}`}>
-        {item.code}
-      </Text>
-      {/* Créditos */}
-      <Text
-        style={styles.year}
-        accessibilityLabel={`${item.year} Ano`}>
-        {item.year} Ano
-      </Text>
+      <Text style={styles.courseCode}>{item.code}</Text>
+      <Text style={styles.year}>{item.year} Ano</Text>
     </View>
-
-    {/* Nome */}
     <Text style={styles.courseName}>{item.name}</Text>
-
-    {/* Docente */}
     <View style={styles.teacherRow}>
       <Text style={styles.teacherLabel}>Docente: </Text>
       <Text style={styles.teacherName}>{item.teacher}</Text>
     </View>
-
     <View style={styles.footer}>
-      <Text style={styles.semesterText}>{item.semester}º Semestre</Text>
-      <Text
-        style={styles.arrow}
-        accessibilityElementsHidden={true}
-        importantForAccessibility="no">
-        →
-      </Text>
+      <Text style={styles.semesterText}>{item.semester}° Semestre</Text>
+      <Text style={styles.arrow}>→</Text>
     </View>
   </TouchableOpacity>
 );
@@ -73,113 +127,138 @@ const CourseCard = ({ item, onPress }) => (
 // ============================================================
 // Screen principal: SearchScreen
 // ============================================================
-const SearchScreen = ({ navigation }) => {
-  // Hook do ViewModel com lógica de pesquisa
-  const { query, results, hasSearched, search, clearSearch } = useSearchViewModel();
-
-  // Referência ao input para focar automaticamente
+const SearchScreen = ({navigation}) => {
+  const {query, results, hasSearched, search, clearSearch} = useSearchViewModel();
   const inputRef = useRef(null);
+  const [isListening, setIsListening] = useState(false);
+  const [voiceError, setVoiceError] = useState('');
 
-  // Adapta ao tamanho do ecrã e rotação
-  const { width } = useWindowDimensions();
+  // Inicia o reconhecimento de voz
+  const handleVoiceSearch = () => {
+    setVoiceError('');
+
+    if (isListening) {
+      setIsListening(false);
+      return;
+    }
+
+    setIsListening(true);
+
+    startVoiceRecognition(
+      // Sucesso — texto reconhecido
+      text => {
+        setIsListening(false);
+        search(text);
+      },
+      // Erro
+      errorMsg => {
+        setIsListening(false);
+        setVoiceError(errorMsg);
+        // Fallback — foca o input para o utilizador escrever
+        setTimeout(() => inputRef.current?.focus(), 300);
+      },
+    );
+  };
 
   return (
-    <SafeAreaView
-      style={styles.container}
-      accessibilityLabel="Ecrã de pesquisa de cadeiras">
-
-      {/* Header com barra de pesquisa */}
-      <View style={styles.header}>
-        <Text
-          style={styles.headerTitle}
-          accessibilityRole="header">
-          Pesquisa
-        </Text>
-        <Text style={styles.headerSubtitle}>
-          Pesquisa por nome, código ou docente
-        </Text>
-
-        {/* Barra de pesquisa */}
-        <View style={styles.searchContainer}>
-          <Text
-            style={styles.searchIcon}
-            accessibilityElementsHidden={true}>
-            🔍
-          </Text>
-          <TextInput
-            ref={inputRef}
-            style={styles.searchInput}
-            placeholder="Ex: PWM, Git, Carsolino..."
-            placeholderTextColor="#7a5fa0"
-            value={query}
-            onChangeText={search}
-            autoCorrect={false}
-            returnKeyType="search"
-            // Acessibilidade
-            accessibilityLabel="Campo de pesquisa de cadeiras"
-            accessibilityHint="Escreve o nome da cadeira, código ou docente"
-          />
-
-          {/* Botão limpar pesquisa */}
-          {query.length > 0 && (
-            <TouchableOpacity
-              style={styles.clearButton}
-              onPress={clearSearch}
-              accessibilityLabel="Limpar pesquisa"
-              accessibilityRole="button">
-              <Text style={styles.clearButtonText}>✕</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-
-      {/* Contador de resultados */}
-      {hasSearched && (
-        <Text
-          style={styles.resultsCount}
-          accessibilityLabel={`${results.length} resultados encontrados para ${query}`}>
-          {results.length} resultado{results.length !== 1 ? 's' : ''} para "{query}"
-        </Text>
-      )}
-
-      {/* Lista de resultados */}
+    <SafeAreaView style={styles.container}>
       <FlatList
         data={results}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
+        keyExtractor={item => item.id}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+
+        // Header dentro da FlatList — scroll correto
+        ListHeaderComponent={
+          <View>
+            <View style={styles.header}>
+              <Text style={styles.headerTitle} accessibilityRole="header">
+                Pesquisa
+              </Text>
+              <Text style={styles.headerSubtitle}>
+                Pesquisa por nome, codigo ou docente
+              </Text>
+
+              {/* Barra de pesquisa com microfone */}
+              <View style={[styles.searchContainer, {alignItems: 'center'}]}>
+                <Text style={styles.searchIcon}>🔍</Text>
+                <TextInput
+                  ref={inputRef}
+                  style={styles.searchInput}
+                  placeholder="Ex: PWM, Git, Carsolino..."
+                  placeholderTextColor="#7a5fa0"
+                  value={query}
+                  onChangeText={search}
+                  autoCorrect={false}
+                  returnKeyType="search"
+                  accessibilityLabel="Campo de pesquisa"
+                />
+                {query.length > 0 && (
+                  <TouchableOpacity
+                    style={styles.clearButton}
+                    onPress={clearSearch}
+                    accessibilityRole="button"
+                    accessibilityLabel="Limpar pesquisa">
+                    <Text style={styles.clearButtonText}>✕</Text>
+                  </TouchableOpacity>
+                )}
+                {/* Botao microfone */}
+                <MicButton
+                  isListening={isListening}
+                  onPress={handleVoiceSearch}
+                />
+              </View>
+
+              {/* Estado a ouvir */}
+              {isListening && (
+                <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 10, gap: 8}}>
+                  <ActivityIndicator size="small" color="#f5a623" />
+                  <Text style={{color: '#f5a623', fontSize: 13, fontWeight: '600'}}>
+                    A ouvir... fala agora
+                  </Text>
+                </View>
+              )}
+
+              {/* Erro de voz */}
+              {voiceError ? (
+                <Text style={{color: '#ef4444', fontSize: 12, marginTop: 8}}>
+                  {voiceError}
+                </Text>
+              ) : null}
+            </View>
+
+            {/* Contador de resultados */}
+            {hasSearched && (
+              <Text style={styles.resultsCount}>
+                {results.length} resultado{results.length !== 1 ? 's' : ''} para "{query}"
+              </Text>
+            )}
+          </View>
+        }
+
+        renderItem={({item}) => (
           <CourseCard
             item={item}
-            onPress={() => navigation.navigate('CourseDetail', { course: item })}
+            onPress={() => navigation.navigate('CourseDetail', {course: item})}
           />
         )}
         contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        accessibilityLabel="Lista de resultados da pesquisa"
 
-        // Estado inicial — antes de pesquisar
         ListEmptyComponent={
           !hasSearched ? (
-            <View
-              style={styles.initialContainer}
-              accessibilityLabel="Escreve para pesquisar cadeiras">
+            <View style={styles.initialContainer}>
               <Text style={styles.initialEmoji}>🔍</Text>
               <Text style={styles.initialText}>Pesquisa uma cadeira</Text>
               <Text style={styles.initialSubText}>
-                Podes pesquisar pelo nome da cadeira,{'\n'}
-                código ou nome do docente
+                Escreve ou toca no microfone 🎤{'\n'}
+                para pesquisar por voz
               </Text>
             </View>
           ) : (
-            // Nenhum resultado encontrado
-            <View
-              style={styles.emptyContainer}
-              accessibilityLabel={`Nenhum resultado encontrado para ${query}`}>
+            <View style={styles.emptyContainer}>
               <Text style={styles.emptyEmoji}>😕</Text>
               <Text style={styles.emptyText}>Nenhum resultado encontrado</Text>
-              <Text style={styles.emptySubText}>
-                Tenta pesquisar por outro termo
-              </Text>
+              <Text style={styles.emptySubText}>Tenta pesquisar por outro termo</Text>
             </View>
           )
         }

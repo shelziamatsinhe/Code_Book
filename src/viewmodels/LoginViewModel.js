@@ -1,126 +1,137 @@
-// ============================================================
-// ViewModel: LoginViewModel.js
-// Camada: ViewModel (MVVM)
-// Descrição: Lógica de login e sessão do estudante
-//            Guarda os dados localmente com AsyncStorage
-// ============================================================
-
-import { useState, useCallback, useEffect } from 'react';
+// src/viewmodels/LoginViewModel.js
+import {useState, useEffect} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {loginUser, getStudentByNumero} from '../services/FirebaseService';
 
-// Chave de armazenamento da sessão
 const SESSION_KEY = '@codebook_session';
 
+// ─────────────────────────────────────────
+// Hook de Login com Firebase
+// ─────────────────────────────────────────
 export const useLoginViewModel = () => {
-  const [form, setForm] = useState({ name: '', number: '' });
-  const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  // Atualiza campo do formulário
-  const updateField = useCallback((field, value) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: null }));
-    }
-  }, [errors]);
+  const login = async (numero, password, navigation) => {
+    setError('');
 
-  // Valida o formulário
-  const validate = (form) => {
-    const errors = {};
-    if (!form.name.trim() || form.name.trim().length < 3) {
-      errors.name = 'Nome deve ter pelo menos 3 caracteres';
+    if (!numero || numero.length !== 10) {
+      setError('O numero de estudante deve ter 10 digitos.');
+      return;
     }
-    if (!/^\d{10}$/.test(form.number.trim())) {
-      errors.number = 'Número deve ter exactamente 10 dígitos (ex: 2025080007)';
-    }
-    return errors;
-  };
-
-  // Faz login — guarda os dados no AsyncStorage
-  const login = useCallback(async () => {
-    const validationErrors = validate(form);
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return false;
+    if (!password || password.length < 6) {
+      setError('A password deve ter pelo menos 6 caracteres.');
+      return;
     }
 
-    setIsLoading(true);
+    setLoading(true);
     try {
-      const studentData = {
-        name: form.name.trim(),
-        number: form.number.trim(),
-        email: `${form.number.trim()}@ujac.ac.mz`,
-        course: 'Engenharia Informática',
-        year: '2º Ano',
-        institution: 'UJAC',
+      const email = `${numero}@ujac.ac.mz`;
+      const result = await loginUser(email, password);
+
+      if (!result.success) {
+        setError(result.error);
+        return;
+      }
+
+      const {idToken, localId} = result.user;
+
+      // Buscar perfil completo do Firestore (nome, curso, ano)
+      let nome = '';
+      let curso = 'Engenharia Informatica';
+      let ano = '';
+
+      const profileResult = await getStudentByNumero(numero, idToken);
+      if (profileResult.success && profileResult.student) {
+        nome = profileResult.student.nome || '';
+        curso = profileResult.student.curso || curso;
+        ano = profileResult.student.ano || '';
+      }
+
+      const session = {
+        numero,
+        nome,
+        email,
+        curso,
+        ano,
+        idToken,
+        localId,
       };
-
-      // Guarda a sessão localmente
-      await AsyncStorage.setItem(SESSION_KEY, JSON.stringify(studentData));
-      return true;
-    } catch (error) {
-      setErrors({ general: 'Erro ao iniciar sessão. Tenta novamente.' });
-      return false;
+      await AsyncStorage.setItem(SESSION_KEY, JSON.stringify(session));
+      navigation.replace('Main');
+    } catch (err) {
+      setError('Erro inesperado. Tenta novamente.');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  }, [form]);
-
-  return {
-    form,
-    errors,
-    isLoading,
-    updateField,
-    login,
   };
+
+  return {login, loading, error, setError};
 };
 
-// ============================================================
-// Hook para gerir a sessão global do estudante
-// ============================================================
+// ─────────────────────────────────────────
+// Hook de Sessao Global (ProfileScreen)
+// ─────────────────────────────────────────
 export const useSessionViewModel = () => {
   const [student, setStudent] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Carrega a sessão ao iniciar
   useEffect(() => {
     loadSession();
   }, []);
 
   const loadSession = async () => {
     try {
-      const stored = await AsyncStorage.getItem('@codebook_session');
-      if (stored) {
-        setStudent(JSON.parse(stored));
+      const raw = await AsyncStorage.getItem(SESSION_KEY);
+      if (raw) {
+        const s = JSON.parse(raw);
+        setStudent({
+          name:   s.nome   || s.name   || 'Estudante',
+          number: s.numero || s.number || '',
+          email:  s.email  || '',
+          course: s.curso  || s.course || 'Engenharia Informatica',
+          year:   s.ano    || s.year   || '',
+        });
+      } else {
+        setStudent(null);
       }
-    } catch (error) {
-      console.error('Erro ao carregar sessão:', error);
+    } catch {
+      setStudent(null);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Termina a sessão
   const logout = async () => {
     try {
-      await AsyncStorage.removeItem('@codebook_session');
+      await AsyncStorage.removeItem(SESSION_KEY);
       setStudent(null);
+    } catch {}
+  };
+
+  const getSession = async () => {
+    try {
+      const raw = await AsyncStorage.getItem(SESSION_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const clearSession = logout;
+
+  const updateSession = async updates => {
+    try {
+      const current = await getSession();
+      if (!current) return false;
+      const updated = {...current, ...updates};
+      await AsyncStorage.setItem(SESSION_KEY, JSON.stringify(updated));
+      await loadSession();
       return true;
-    } catch (error) {
-      console.error('Erro ao terminar sessão:', error);
+    } catch {
       return false;
     }
   };
 
-  // Atualiza o estudante na sessão
-  const refreshSession = async () => {
-    await loadSession();
-  };
-
-  return {
-    student,
-    isLoading,
-    logout,
-    refreshSession,
-  };
+  return {student, isLoading, logout, getSession, clearSession, updateSession};
 };

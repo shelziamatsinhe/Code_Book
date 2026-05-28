@@ -1,105 +1,81 @@
-// ============================================================
-// ViewModel: RegisterViewModel.js
-// Camada: ViewModel (MVVM)
-// Descrição: Lógica do formulário de cadastro — CRUD completo
-// ============================================================
+// src/viewmodels/RegisterViewModel.js
+import {useState} from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {registerUser, saveStudent} from '../services/FirebaseService';
 
-import { useState, useCallback } from 'react';
-import { validateStudent } from '../models/Student';
-import StudentService from '../services/StudentService';
-
-const INITIAL_FORM = {
-  name: '',
-  number: '',
-  course: '',
-  year: '',
-};
+const SESSION_KEY = '@codebook_session';
 
 export const useRegisterViewModel = () => {
-  const [form, setForm] = useState(INITIAL_FORM);
-  const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  // Atualiza campo do formulário
-  const updateField = useCallback((field, value) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: null }));
+  const register = async (formData, navigation) => {
+    setError('');
+    const {numero, nome, curso, ano, password, confirmPassword} = formData;
+
+    if (!numero || numero.length !== 10) {
+      setError('O numero de estudante deve ter 10 digitos.');
+      return;
     }
-  }, [errors]);
-
-  // CREATE — Registar novo estudante (POST)
-  const submitForm = useCallback(async () => {
-    const validationErrors = validateStudent(form);
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return false;
+    if (!nome || nome.trim().length < 3) {
+      setError('Insere o teu nome completo.');
+      return;
+    }
+    if (!password || password.length < 6) {
+      setError('A password deve ter pelo menos 6 caracteres.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('As passwords nao coincidem.');
+      return;
     }
 
-    setIsLoading(true);
-    setErrors({});
-
+    setLoading(true);
     try {
+      const email = `${numero}@ujac.ac.mz`;
+
+      const authResult = await registerUser(email, password);
+      if (!authResult.success) {
+        setError(authResult.error);
+        return;
+      }
+
+      const {idToken, localId} = authResult.user;
+
       const studentData = {
-        ...form,
-        email: `${form.number.trim()}@ujac.ac.mz`,
+        numero,
+        nome: nome.trim(),
+        email,
+        curso: curso || 'Engenharia Informatica',
+        ano: ano || '',
+        localId,
+        criadoEm: new Date().toLocaleString('pt-MZ', {timeZone: 'Africa/Maputo'}),
       };
-      await StudentService.registerStudent(studentData);
-      setIsSuccess(true);
-      setForm(INITIAL_FORM);
-      return true;
-    } catch (error) {
-      setErrors({ general: 'Erro ao registar. Verifica a ligação à internet.' });
-      return false;
+
+      const saveResult = await saveStudent(studentData, idToken);
+      if (!saveResult.success) {
+        console.warn('Aviso Firestore:', saveResult.error);
+      }
+
+      // Sessao completa com ano
+      const session = {
+        numero,
+        nome: nome.trim(),
+        email,
+        curso: curso || 'Engenharia Informatica',
+        ano: ano || '',
+        idToken,
+        localId,
+      };
+      await AsyncStorage.setItem(SESSION_KEY, JSON.stringify(session));
+
+      navigation.replace('Main');
+    } catch (err) {
+      setError('Erro inesperado. Tenta novamente.');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  }, [form]);
-
-  // UPDATE — Atualizar estudante (PUT)
-  const updateStudent = useCallback(async (id, data) => {
-    setIsLoading(true);
-    try {
-      await StudentService.updateStudent(id, data);
-      return true;
-    } catch (error) {
-      setErrors({ general: 'Erro ao atualizar. Tenta novamente.' });
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  // DELETE — Remover estudante
-  const deleteStudent = useCallback(async (id) => {
-    setIsLoading(true);
-    try {
-      await StudentService.deleteStudent(id);
-      return true;
-    } catch (error) {
-      setErrors({ general: 'Erro ao remover. Tenta novamente.' });
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const resetForm = useCallback(() => {
-    setForm(INITIAL_FORM);
-    setErrors({});
-    setIsSuccess(false);
-  }, []);
-
-  return {
-    form,
-    errors,
-    isLoading,
-    isSuccess,
-    updateField,
-    submitForm,
-    updateStudent,
-    deleteStudent,
-    resetForm,
   };
+
+  return {register, loading, error, setError};
 };
