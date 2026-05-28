@@ -1,0 +1,74 @@
+# ============================================================
+# CD — Continuous Delivery
+# Ficheiro: .github/workflows/cd.yml
+# Descricao: Gera APK automaticamente a cada push para 'main'
+#            O APK fica disponivel para download no GitHub
+# ============================================================
+
+name: CD - Gerar APK
+
+# Quando este workflow e ativado:
+on:
+  push:
+    branches:
+      - main    # so corre quando fazes push/merge para main
+
+jobs:
+  build-apk:
+    name: Build APK Android
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Faz download do codigo
+      - name: Checkout do codigo
+        uses: actions/checkout@v3
+
+      # 2. Configura Node.js
+      - name: Configurar Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      # 3. Configura Java 17 (necessario para Android)
+      - name: Configurar Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # 4. Instala dependencias do projeto
+      - name: Instalar dependencias
+        run: npm install --legacy-peer-deps
+
+      # 5. Configura o Android SDK
+      - name: Configurar Android SDK
+        uses: android-actions/setup-android@v2
+
+      # 6. Da permissao de execucao ao Gradle
+      - name: Permissao Gradle
+        run: chmod +x android/gradlew
+
+      # 7. Compila o APK de debug
+      - name: Compilar APK
+        run: |
+          cd android
+          ./gradlew assembleDebug --no-daemon
+        env:
+          # Evita problemas de memoria na compilacao
+          GRADLE_OPTS: "-Dorg.gradle.daemon=false -Xmx4g"
+
+      # 8. Guarda o APK como artefacto do GitHub
+      #    Podes descarregar em: Actions > ultimo run > Artifacts
+      - name: Guardar APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: CodeBook-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30    # fica disponivel 30 dias
+
+      # 9. Mostra onde descarregar o APK
+      - name: Instrucoes APK
+        run: |
+          echo "APK gerado com sucesso!"
+          echo "Para descarregar: GitHub > Actions > CD - Gerar APK > Artifacts"

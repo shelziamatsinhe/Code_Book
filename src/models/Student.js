@@ -1,73 +1,46 @@
-// ============================================================
-// Model: Student.js
-// Camada: Model (MVVM)
-// Descrição: Define a estrutura de dados de um estudante
-//            e funções de validação do formulário
-// Formato número UJAC: 2025080007 (10 dígitos)
-// Formato email UJAC: 2025080007@ujac.ac.mz
-// ============================================================
+// src/models/Student.js
 
-/**
- * Estrutura de um estudante
- * @typedef {Object} Student
- * @property {string} id - Identificador único
- * @property {string} name - Nome completo
- * @property {string} number - Número de estudante (ex: 2025080007)
- * @property {string} course - Curso
- * @property {string} year - Ano académico
- * @property {string} email - Email institucional gerado automaticamente
- */
-
-// Cursos disponíveis na UJAC
+// Cursos disponiveis na UJAC
 export const UJAC_COURSES = [
-  'Engenharia Informática',
-  'Inteligência Artificial',
+  'Engenharia Informatica',
+  'Inteligencia Artificial',
 ];
 
-// Anos académicos disponíveis
+// Anos academicos
 export const ACADEMIC_YEARS = [
-  '1º Ano',
-  '2º Ano',
-  '3º Ano',
-  '4º Ano',
-  '5º Ano',
+  '1° Ano',
+  '2° Ano',
+  '3° Ano',
+  '4° Ano',
+  '5° Ano',
 ];
 
-// Gera o email institucional a partir do número
-// Ex: 2025080007 → 2025080007@ujac.ac.mz
-export const generateEmail = (number) => {
-  if (!number || number.trim().length === 0) return '';
-  return `${number.trim()}@ujac.ac.mz`;
+// Gera email institucional a partir do numero
+export const generateEmail = (numero) => {
+  return `${numero}@ujac.ac.mz`;
 };
 
-// Validações do formulário
-export const validateStudent = (form) => {
-  const errors = {};
-
-  // Valida nome
-  if (!form.name.trim()) {
-    errors.name = 'O nome é obrigatório';
-  } else if (form.name.trim().length < 3) {
-    errors.name = 'O nome deve ter pelo menos 3 caracteres';
+// Valida dados do estudante
+// Retorna { valid: true } ou { valid: false, error: 'mensagem' }
+export const validateStudent = ({ numero, nome, password }) => {
+  if (!numero || numero.length !== 10) {
+    return { valid: false, error: 'O numero de estudante deve ter 10 digitos.' };
   }
-
-  // Valida número de estudante
-  // Formato UJAC: 10 dígitos — ex: 2025080007
-  if (!form.number.trim()) {
-    errors.number = 'O número de estudante é obrigatório';
-  } else if (!/^\d{10}$/.test(form.number.trim())) {
-    errors.number = 'O número deve ter exactamente 10 dígitos (ex: 2025080007)';
+  if (!nome || nome.trim().length < 3) {
+    return { valid: false, error: 'O nome deve ter pelo menos 3 caracteres.' };
   }
-
-  // Valida curso
-  if (!form.course) {
-    errors.course = 'Selecciona o teu curso';
+  if (!password || password.length < 6) {
+    return { valid: false, error: 'A password deve ter pelo menos 6 caracteres.' };
   }
-
-  // Valida ano
-  if (!form.year) {
-    errors.year = 'Selecciona o teu ano';
-  }
-
-  return errors;
+  return { valid: true };
 };
+
+// Estrutura base de um estudante
+export const createStudent = ({ numero, nome, curso, ano }) => ({
+  numero,
+  nome,
+  email: generateEmail(numero),
+  curso: curso || 'Engenharia Informatica',
+  ano: ano || '',
+  criadoEm: new Date().toLocaleString('pt-MZ', { timeZone: 'Africa/Maputo' }),
+});

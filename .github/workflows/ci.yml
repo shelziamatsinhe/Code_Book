@@ -1,0 +1,47 @@
+# ============================================================
+# CI — Continuous Integration
+# Ficheiro: .github/workflows/ci.yml
+# Descricao: Corre testes automaticamente a cada push
+#            para a branch 'develop'
+# ============================================================
+
+name: CI - Testes Automaticos
+
+# Quando este workflow e ativado:
+on:
+  push:
+    branches:
+      - develop          # so corre quando fazes push para develop
+  pull_request:
+    branches:
+      - develop          # tambem corre em pull requests para develop
+
+jobs:
+  test:
+    name: Correr Testes Jest
+    runs-on: ubuntu-latest   # usa uma maquina virtual Linux no GitHub
+
+    steps:
+      # 1. Faz download do codigo do repositorio
+      - name: Checkout do codigo
+        uses: actions/checkout@v3
+
+      # 2. Instala o Node.js versao 18
+      - name: Configurar Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'         # guarda cache do npm para ser mais rapido
+
+      # 3. Instala todas as dependencias do projeto
+      - name: Instalar dependencias
+        run: npm install --legacy-peer-deps
+
+      # 4. Corre os testes Jest
+      - name: Correr testes
+        run: npm test -- --watchAll=false --passWithNoTests
+
+      # 5. Mostra um resumo no GitHub
+      - name: Resumo dos testes
+        if: always()
+        run: echo "Testes concluidos para o CodeBook UJAC"
