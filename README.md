@@ -30,6 +30,9 @@ O CodeBook é uma aplicação mobile desenvolvida em **React Native (JavaScript)
 - Design responsivo com scroll em todos os ecrãs
 - Acessibilidade completa com suporte a leitor de ecrã
 - Mensagens de erro em português
+- Pipeline CI/CD com GitHub Actions
+- Testes automatizados com Jest
+- APK de Release gerado automaticamente
 
 ---
 
@@ -46,6 +49,8 @@ O CodeBook é uma aplicação mobile desenvolvida em **React Native (JavaScript)
 | Armazenamento local | AsyncStorage |
 | Estado global | React Context API |
 | API mock | JSONPlaceholder |
+| CI/CD | GitHub Actions |
+| Testes | Jest |
 
 ---
 
@@ -53,77 +58,70 @@ O CodeBook é uma aplicação mobile desenvolvida em **React Native (JavaScript)
 
 ```
 Code_Book/
+├── .github/
+│   └── workflows/
+│       ├── ci.yml                    ← Pipeline CI (testes automáticos)
+│       └── cd.yml                    ← Pipeline CD (geração de APK)
+├── __tests__/
+│   └── App.test.js                   ← Testes Jest
 ├── index.js                          ← Ponto de entrada
 ├── android/                          ← Configuração Android
 └── src/
     ├── assets/
-    │   └── reader.png                ← Imagem WelcomeScreen
+    │   └── reader.png
     ├── context/
     │   └── FavoritesContext.js       ← Estado global dos favoritos
     ├── models/
-    │   ├── Course.js                 ← Cadeiras e guias (MOCK_COURSES + MOCK_GUIDES)
-    │   └── Student.js                ← Estrutura, validação e funções de estudante
+    │   ├── Course.js                 ← Cadeiras e guias
+    │   └── Student.js                ← Estrutura e validação
     ├── services/
-    │   ├── FirebaseService.js        ← Firebase Auth + Firestore via REST API
-    │   └── StudentService.js        ← CRUD JSONPlaceholder
+    │   ├── FirebaseService.js        ← Firebase Auth + Firestore REST API
+    │   └── StudentService.js         ← CRUD JSONPlaceholder
     ├── viewmodels/
     │   ├── HomeViewModel.js
     │   ├── SearchViewModel.js
-    │   ├── LoginViewModel.js         ← Login + sessão global
-    │   ├── RegisterViewModel.js      ← Registo com Firebase
+    │   ├── LoginViewModel.js
+    │   ├── RegisterViewModel.js
     │   ├── FavoritesViewModel.js
     │   └── ProfileViewModel.js
     ├── screens/
     │   ├── WelcomeScreen.jsx
-    │   ├── LoginScreen.jsx           ← Login com número + password
-    │   ├── Login.styles.js
-    │   ├── HomeScreen.jsx
-    │   ├── HomeScreen.styles.js
-    │   ├── CourseDetailScreen.jsx    ← Guias com scripts e favoritos
-    │   ├── CourseDetail.styles.js
-    │   ├── SearchScreen.jsx          ← Pesquisa por texto
-    │   ├── Search.styles.js
-    │   ├── FavoritesScreen.jsx
-    │   ├── Favorites.styles.js
-    │   ├── ProfileScreen.jsx         ← Perfil com dados reais da sessão
-    │   ├── Profile.styles.js
+    │   ├── LoginScreen.jsx
     │   ├── RegisterScreen.jsx
-    │   ├── Register.styles.js
-    │   ├── StudentListScreen.jsx
-    │   └── StudentList.styles.js
+    │   ├── HomeScreen.jsx
+    │   ├── CourseDetailScreen.jsx
+    │   ├── SearchScreen.jsx
+    │   ├── FavoritesScreen.jsx
+    │   ├── ProfileScreen.jsx
+    │   └── StudentListScreen.jsx
     └── routes/
-        └── AppNavigator.jsx          ← Stack + Tab Bar + FavoritesProvider
+        └── AppNavigator.jsx
 ```
 
 ---
 
-## Ecrãs da Aplicação
+## CI/CD — GitHub Actions
 
-| Ecrã | Descrição |
-|------|-----------|
-| WelcomeScreen | Ecrã de boas-vindas com navegação para login |
-| LoginScreen | Login com número de estudante e password |
-| RegisterScreen | Registo com criação de conta Firebase |
-| HomeScreen | Lista de cadeiras com cards informativos |
-| CourseDetailScreen | Guias práticos com scripts, exercícios e favoritos |
-| SearchScreen | Pesquisa por nome, código ou docente |
-| FavoritesScreen | Guias guardados com atualização automática |
-| ProfileScreen | Perfil real do estudante com dados da sessão |
-| StudentListScreen | Lista de estudantes da API JSONPlaceholder |
+### Pipeline CI (Integração Contínua)
+- **Ficheiro:** `.github/workflows/ci.yml`
+- **Acionado em:** push para `develop`
+- **O que faz:** instala dependências e corre os testes Jest automaticamente
+- **Duração:** ~26 segundos
 
----
+### Pipeline CD (Entrega Contínua)
+- **Ficheiro:** `.github/workflows/cd.yml`
+- **Acionado em:** push para `main`
+- **O que faz:** compila o projeto e gera o APK automaticamente
+- **Duração:** ~4 minutos
+- **APK disponível em:** GitHub → Actions → CD - Gerar APK → Artifacts
 
-## Firebase — Configuração
-
-A aplicação usa o Firebase via **REST API** (sem biblioteca nativa), compatível com React Native 0.72.
-
-| Serviço | Uso |
-|---------|-----|
-| Firebase Auth | Registo e login com email institucional |
-| Cloud Firestore | Armazenamento de perfis de estudantes |
-
-**Formato do email institucional:** `{numero}@ujac.ac.mz`  
-Exemplo: `2025080007@ujac.ac.mz`
+### Testes Automatizados
+- **Ficheiro:** `__tests__/App.test.js`
+- **Framework:** Jest
+- **Total de testes:** 14 testes em 3 grupos
+  - Student Model (5 testes)
+  - Course Model (5 testes)
+  - Search Logic (4 testes)
 
 ---
 
@@ -141,81 +139,64 @@ Exemplo: `2025080007@ujac.ac.mz`
 ## Como Executar
 
 ### Pré-requisitos
-
 - Node.js 18+
 - React Native CLI
 - Android Studio com SDK configurado
 - Dispositivo Android ou emulador
-- Conta Firebase com projeto criado
 
 ### Instalação
-
 ```bash
-# Clonar o repositório
 git clone https://github.com/shelziamatsinhe/Code_Book.git
 cd Code_Book
-
-# Instalar dependências
 npm install --legacy-peer-deps
 ```
 
-### Executar
-
+### Executar em modo de desenvolvimento
 ```bash
-# Terminal 1 — iniciar o Metro
+# Terminal 1
 npx react-native start --reset-cache
 
-# Terminal 2 — instalar no dispositivo
+# Terminal 2
 adb reverse tcp:8081 tcp:8081
 npx react-native run-android
 ```
 
-### Problemas Conhecidos
+### Gerar APK de Release
+```bash
+# Gerar bundle
+npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res
 
-| Problema | Solução |
-|----------|---------|
-| Porta 8081 ocupada | `netstat -ano \| findstr :8081` depois `taskkill /PID X /F` |
-| `local.properties` em falta | Adicionar `sdk.dir=C:\Users\...\AppData\Local\Android\Sdk` |
-| INSTALL_FAILED_USER_RESTRICTED | Ativar "Instalar via USB" nas opções do programador |
-| Network request failed | A app precisa de internet para autenticação Firebase |
+# Compilar APK
+cd android
+.\gradlew assembleRelease
 
----
-
-## Dependências Principais
-
-| Pacote | Versão | Uso |
-|--------|--------|-----|
-| `react-native` | 0.72.7 | Framework mobile |
-| `@react-navigation/native` | 6.1.9 | Navegação |
-| `@react-navigation/native-stack` | 6.9.17 | Stack de navegação |
-| `@react-navigation/bottom-tabs` | 6.6.1 | Tab Bar |
-| `react-native-screens` | 3.29.0 | Otimização de ecrãs |
-| `react-native-safe-area-context` | 4.8.2 | Áreas seguras |
-| `@react-native-async-storage/async-storage` | 1.21.0 | Sessão e favoritos |
+# APK gerado em:
+# android/app/build/outputs/apk/release/app-release.apk
+```
 
 ---
 
 ## Estrutura Git
 
 ```
-main
-└── develop
-    ├── feature/setup-architecture   ✅ Fase 1 — Arquitetura base
-    ├── feature/ui-ux                ✅ Fase 2 — Interface e design
-    ├── feature/api-integration      ✅ Fase 3 — API JSONPlaceholder
-    └── feature/authentication       ✅ Fase 4 — Firebase Auth + Firestore
+main          ← producao (CD — gera APK automaticamente)
+└── develop   ← integracao (CI — testes automaticos)
+    ├── feature/setup-architecture   ✅ Fase 1
+    ├── feature/ui-ux                ✅ Fase 2
+    ├── feature/api-integration      ✅ Fase 3
+    ├── feature/authentication       ✅ Fase 4
+    └── feature/ci-cd                ✅ Fase 5
 ```
 
 ### Convenção de Commits
-
 ```
 feat:     nova funcionalidade
-fix:      correção de erro
-docs:     atualização de documentação
-style:    formatação sem alteração de lógica
-refactor: refatoração de código
-test:     adição de testes
-chore:    tarefas de manutenção
+fix:      correcao de erro
+docs:     atualizacao de documentacao
+style:    formatacao sem alteracao de logica
+refactor: refatoracao de codigo
+test:     adicao de testes
+chore:    tarefas de manutencao
 ```
 
 ---
@@ -223,31 +204,33 @@ chore:    tarefas de manutenção
 ## Fases do Projeto
 
 ### ✅ Fase 1 — Arquitetura Base
-- Projeto React Native criado com arquitetura MVVM
-- WelcomeScreen e HomeScreen implementados
-- Navegação Stack + Tab Bar configurada
+- Projeto React Native com arquitetura MVVM
+- WelcomeScreen e HomeScreen
+- Navegação Stack + Tab Bar
 
 ### ✅ Fase 2 — UI/UX e Design Responsivo
 - Design com paleta de cores UJAC (roxo/dourado)
 - Tab Bar com ícones SVG personalizados
 - Todos os ecrãs com scroll completo
-- Acessibilidade com accessibilityLabel e accessibilityRole
-- Headers compactos dentro do scroll
+- Acessibilidade completa
 
 ### ✅ Fase 3 — Integração com API REST
 - CRUD completo via JSONPlaceholder
-- Formulário de cadastro com validação em tempo real
+- Formulário de cadastro com validação
 - Geração automática de email institucional
-- Lista de estudantes consumida da API
-- Tratamento de erros e estados de carregamento
+- Tratamento de erros em português
 
 ### ✅ Fase 4 — Autenticação Firebase
-- Firebase Auth via REST API (sem biblioteca nativa)
-- Registo com conta Firebase + perfil guardado no Firestore
-- Login com número de estudante e password
+- Firebase Auth via REST API
+- Registo e login com email institucional UJAC
+- Perfil guardado no Firestore
 - Sessão persistente com AsyncStorage
-- Contexto global de favoritos com atualização automática
-- Todas as mensagens de erro em português
+- Favoritos com contexto global
+
+### ✅ Fase 5 — CI/CD
+- Pipeline CI com testes Jest automáticos
+- Pipeline CD com geração de APK automática
+- APK de Release funcional
 
 ---
 
@@ -262,9 +245,3 @@ chore:    tarefas de manutenção
 | Adylan Cumbane | Desenvolvimento |
 
 **Docente:** Msc. Armando Correia Jr.
-
----
-
-## Documentação da API
-
-Consulta o ficheiro [README_API.md](./README_API.md) para a documentação completa da API REST e Firebase.
